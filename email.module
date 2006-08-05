@@ -1,0 +1,159 @@
+<?php
+
+
+/**
+ * Implementation of hook_help().
+ */
+function email_help($section) {
+  switch ($section) {
+    case 'admin/modules#description':
+      return t('Defines a field type for email addresses. <em>Note: Requires content.module.</em>');
+  }
+}
+
+
+/**
+ * Implementation of hook_field_info().
+ */
+function email_field_info() {
+  return array(
+    'email' => array('label' => t('E-Mail')),
+   );
+}
+
+
+/**
+ * Implementation of hook_field_settings().
+ */
+function email_field_settings($op, $field) {
+  switch ($op) {      
+    case 'database columns':
+      $columns = array(
+        'email' => array('type' => 'varchar', 'length' => 255, 'not null' => TRUE),
+      );
+      return $columns;
+  }
+}
+
+
+/**
+ * Implementation of hook_field().
+ */
+function email_field($op, &$node, $field, &$node_field, $teaser, $page) {
+  switch ($op) {
+    case 'view':
+      foreach ($node_field as $delta => $item) {
+        $node_field[$delta]['view'] = email_field_view_item($field, $item);
+      }
+      return theme('field', $node, $field, $node_field, $teaser, $page);
+  }
+}
+
+
+/**
+ * Implementation of hook_field_view_item().
+ *
+ */
+function email_field_view_item($field, $node_field_item) {
+  if (!isset($node_field_item['email'])) {
+    return '';
+  }
+  else {
+    $mailto =  '<a href="mailto:'. $node_field_item['email']. '">'. check_plain($node_field_item['email']) .'</a>';
+    return $mailto;
+  }
+}
+
+
+/**
+ * Implementation of hook_widget_info().
+ */
+function email_widget_info() {
+  return array(
+    'email' => array(
+      'label' => t('Textfield'),
+      'field types' => array('email'),
+    ),
+  );
+}
+
+
+/**
+ * Implementation of hook_widget_settings().
+ */
+function email_widget_settings($op, $widget) {
+  switch ($op) {
+    case 'form':
+      $form = array();
+      $form['size'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Size'),
+        '#default_value' => isset($widget['size']) ? $widget['size'] : 60,
+        '#required' => FALSE,
+        '#description' => t('Size of textfield'),
+      );
+      return $form;
+
+    case 'validate':
+      if (!empty($widget['size']) && (!is_numeric($widget['size']) || intval($widget['size']) != $widget['size'] || $widget['size'] <= 0)) {
+        form_set_error('size', t('"Size" must be a positive integer.'));
+      }
+      break;
+
+    case 'save':
+      return array('size');
+  }
+}
+
+
+/**
+ * Implementation of hook_widget().
+ */
+function email_widget($op, &$node, $field, &$node_field) {
+  switch ($op) {   
+    case 'form':
+      $form = array();
+      $form[$field['field_name']] = array('#tree' => TRUE);
+      
+      if ($field['multiple']) {
+        $form[$field['field_name']]['#type'] = 'fieldset';
+        $form[$field['field_name']]['#title'] = t($field['widget']['label']);
+        foreach (range(0,2) as $delta) {
+          $form[$field['field_name']][$delta]['email'] = array(
+            '#type' => 'textfield',
+            '#title' => '',
+            '#default_value' => isset($node_field[$delta]['email']) ? $node_field[$delta]['email'] : '',
+            '#required' => $field['required'] ? $field['required'] : FALSE,
+            '#maxlength' => 255,
+            '#weight' => $field['widget']['weight'],
+            '#size' => isset($field['widget']['size']) ? $field['widget']['size'] : 60,
+          );
+        }
+      }
+      else {
+        $form[$field['field_name']][0]['email'] = array(
+          '#type' => 'textfield',
+          '#title' => $field['widget']['label'],
+          '#default_value' => isset($node_field[0]['email']) ? $node_field[0]['email'] : '',
+          '#required' => $field['required'] ? $field['required'] : FALSE,
+          '#maxlength' => 255,
+          '#weight' => $field['widget']['weight'],
+          '#size' => isset($field['widget']['size']) ? $field['widget']['size'] : 60,
+        );
+      }
+      
+      return $form;
+    
+    case 'validate':
+      if (is_array($node_field)) {
+          foreach ($node_field as $delta => $item) {
+            if ($item['email'] != '' && !valid_email_address($item['email'])) {
+              form_set_error($field['field_name'],t('"%mail" is not a valid email address',array('%mail' => $item['email'])));
+            }
+          }
+      }
+      break;
+  }           
+}
+
+?>
