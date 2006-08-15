@@ -59,7 +59,15 @@ function email_field_view_item($field, $node_field_item) {
     return '';
   }
   else {
-    $mailto =  '<a href="mailto:'. $node_field_item['email']. '">'. check_plain($node_field_item['email']) .'</a>';
+    if ($field['widget']['encryption'] && module_exist('invisimail')) {
+      $format = $GLOBALS['invisimail_format'];
+      variable_set('invisimail_link_'.$format, TRUE);
+      variable_set('invisimail_js_'.$format, TRUE);
+      $mailto = invisimail_ascii_encode($node_field_item['email']);
+    }
+    else {
+      $mailto =  '<a href="mailto:'. $node_field_item['email']. '">'. check_plain($node_field_item['email']) .'</a>';
+    }
     return $mailto;
   }
 }
@@ -92,8 +100,15 @@ function email_widget_settings($op, $widget) {
         '#required' => FALSE,
         '#description' => t('Size of textfield'),
       );
+      if (module_exist('invisimail')) {
+        $form['encryption'] = array(
+          '#type' => 'checkbox',
+          '#title' => t('Encrypt Mails with Invisimail'),
+          '#default_value' => isset($widget['encryption']) ? $widget['encryption'] : 0,
+        );
+      }
       return $form;
-
+      
     case 'validate':
       if (!empty($widget['size']) && (!is_numeric($widget['size']) || intval($widget['size']) != $widget['size'] || $widget['size'] <= 0)) {
         form_set_error('size', t('"Size" must be a positive integer.'));
@@ -101,7 +116,7 @@ function email_widget_settings($op, $widget) {
       break;
 
     case 'save':
-      return array('size');
+      return array('size', 'encryption');
   }
 }
 

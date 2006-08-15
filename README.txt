@@ -5,8 +5,4 @@ Features:
 ---------
 * validation of emails
 * turns addresses into a mailto link
-
-
-Todo List:
-----------
-* encryption of addresses to avoid spam
+* encryption of addresses to avoid spam (requires invisimail.module)
