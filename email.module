@@ -142,6 +142,7 @@ function email_widget($op, &$node, $field, &$node_field) {
             '#maxlength' => 255,
             '#weight' => $field['widget']['weight'],
             '#size' => isset($field['widget']['size']) ? $field['widget']['size'] : 60,
+            '#description' => isset($field['widget']['description']) ? $field['widget']['description'] : '',
           );
         }
       }
@@ -154,6 +155,7 @@ function email_widget($op, &$node, $field, &$node_field) {
           '#maxlength' => 255,
           '#weight' => $field['widget']['weight'],
           '#size' => isset($field['widget']['size']) ? $field['widget']['size'] : 60,
+          '#description' => isset($field['widget']['description']) ? $field['widget']['description'] : '',
         );
       }
       
