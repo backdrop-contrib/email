@@ -61,8 +61,10 @@ function email_field_view_item($field, $node_field_item) {
   else {
     if ($field['widget']['encryption'] && module_exist('invisimail')) {
       $format = $GLOBALS['invisimail_format'];
-      variable_set('invisimail_link_'.$format, TRUE);
-      variable_set('invisimail_js_'.$format, TRUE);
+      if (!(variable_get('invisimail_link_'.$format, TRUE))) {     
+        variable_set('invisimail_link_'.$format, TRUE);
+        variable_set('invisimail_js_'.$format, TRUE);
+      }
       $mailto = invisimail_ascii_encode($node_field_item['email']);
     }
     else {
@@ -128,7 +130,10 @@ function email_widget($op, &$node, $field, &$node_field) {
   switch ($op) {   
     case 'form':
       $form = array();
-      $form[$field['field_name']] = array('#tree' => TRUE);
+      $form[$field['field_name']] = array(
+        '#tree' => TRUE, 
+        '#weight' => $field['widget']['weight'],
+      );
       
       if ($field['multiple']) {
         $form[$field['field_name']]['#type'] = 'fieldset';
@@ -140,7 +145,6 @@ function email_widget($op, &$node, $field, &$node_field) {
             '#default_value' => isset($node_field[$delta]['email']) ? $node_field[$delta]['email'] : '',
             '#required' => $field['required'] ? $field['required'] : FALSE,
             '#maxlength' => 255,
-            '#weight' => $field['widget']['weight'],
             '#size' => isset($field['widget']['size']) ? $field['widget']['size'] : 60,
             '#description' => isset($field['widget']['description']) ? $field['widget']['description'] : '',
           );
@@ -153,7 +157,6 @@ function email_widget($op, &$node, $field, &$node_field) {
           '#default_value' => isset($node_field[0]['email']) ? $node_field[0]['email'] : '',
           '#required' => $field['required'] ? $field['required'] : FALSE,
           '#maxlength' => 255,
-          '#weight' => $field['widget']['weight'],
           '#size' => isset($field['widget']['size']) ? $field['widget']['size'] : 60,
           '#description' => isset($field['widget']['description']) ? $field['widget']['description'] : '',
         );
