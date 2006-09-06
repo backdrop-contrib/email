@@ -41,21 +41,33 @@ function email_field_settings($op, $field) {
  */
 function email_field($op, &$node, $field, &$node_field, $teaser, $page) {
   switch ($op) {
-    case 'view':
+    case 'view':     
       foreach ($node_field as $delta => $item) {
-        $node_field[$delta]['view'] = email_field_view_item($field, $item);
+        $node_field[$delta]['view'] = content_format($field, $item, 'email', $node);
       }
       return theme('field', $node, $field, $node_field, $teaser, $page);
   }
 }
 
-
 /**
- * Implementation of hook_field_view_item().
+ * Implementation of hook_field_formatter_info().
  *
  */
-function email_field_view_item($field, $node_field_item) {
-  if (!isset($node_field_item['email'])) {
+function email_field_formatter_info() {
+  return array(
+    'email' => array(
+      'label' => 'Email',
+      'field types' => array('email'),
+    ),
+  );
+}
+
+/**
+ * Implementation of hook_field_formattes().
+ *
+ */
+function email_field_formatter($field, $item, $formatter, $node) {
+  if (!isset($item['email'])) {
     return '';
   }
   else {
@@ -65,10 +77,10 @@ function email_field_view_item($field, $node_field_item) {
         variable_set('invisimail_link_'.$format, TRUE);
         variable_set('invisimail_js_'.$format, TRUE);
       }
-      $mailto = invisimail_ascii_encode($node_field_item['email']);
+      $mailto = invisimail_ascii_encode($item['email']);
     }
     else {
-      $mailto =  '<a href="mailto:'. $node_field_item['email']. '">'. check_plain($node_field_item['email']) .'</a>';
+      $mailto =  '<a href="mailto:'. $item['email']. '">'. check_plain($item['email']) .'</a>';
     }
     return $mailto;
   }
