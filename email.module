@@ -26,7 +26,7 @@ function email_field_info() {
  * Implementation of hook_field_settings().
  */
 function email_field_settings($op, $field) {
-  switch ($op) {      
+  switch ($op) {
     case 'database columns':
       $columns = array(
         'email' => array('type' => 'varchar', 'length' => 255, 'not null' => TRUE),
@@ -62,16 +62,15 @@ function email_field_formatter_info() {
   );
 }
 
-/**
- * Implementation of hook_field_formattes().
- *
- */
 function email_field_formatter($field, $item, $formatter, $node) {
-  if (!isset($item['email'])) {
+  if (empty($item['email'])) {
     return '';
   }
   else {
-    if ($field['widget']['encryption'] && module_exist('invisimail')) {
+    if ($field['widget']['link_type'] == 'form') {
+      $mailto = l(t('Email Contact Form'), 'email/'.$node->nid.'/'.$field['field_name']);
+    }
+    elseif ($field['widget']['link_type'] == 'mailto_encrypt' && module_exist('invisimail')) {
       $format = $GLOBALS['invisimail_format'];
       if (!(variable_get('invisimail_link_'.$format, TRUE))) {     
         variable_set('invisimail_link_'.$format, TRUE);
@@ -114,13 +113,21 @@ function email_widget_settings($op, $widget) {
         '#required' => FALSE,
         '#description' => t('Size of textfield'),
       );
+      
+      $options = array(
+        'mailto' => t('Mailto: Direct link'), 
+        'form' => t('Contact form'), 
+      );
       if (module_exist('invisimail')) {
-        $form['encryption'] = array(
-          '#type' => 'checkbox',
-          '#title' => t('Encrypt Mails with Invisimail'),
-          '#default_value' => isset($widget['encryption']) ? $widget['encryption'] : 0,
-        );
+        $options += array('mailto_encrypt' => t('Mailto: Direct link with invisimail encryption'));
       }
+      $form['link_type'] = array(
+        '#type' => 'radios',
+        '#title' => t('Email Link Type'),
+        '#default_value' => isset($widget['link_type']) ? $widget['link_type'] : 'mailto',
+        '#options' => $options,
+      );
+      
       return $form;
       
     case 'validate':
@@ -130,7 +137,7 @@ function email_widget_settings($op, $widget) {
       break;
 
     case 'save':
-      return array('size', 'encryption');
+      return array('size', 'link_type');
   }
 }
 
@@ -188,4 +195,169 @@ function email_widget($op, &$node, $field, &$node_field) {
   }           
 }
 
+/**
+ * Implementation of hook_menu().
+ */
+function email_menu($may_cache) {
+  $items = array();
+
+  if ($may_cache) {
+    $items[] = array('path' => 'email',
+      'title' => t('Email Contact Form'),
+      'callback' => 'email_mail_page',
+      'access' => user_access('access content'),
+      'type' => MENU_CALLBACK,
+    );
+  }
+  return $items;
+}
+
+/**
+ * The contact form page.
+ */
+function email_mail_page($nid=null, $fieldname=null) {
+  if (empty($nid) || empty($fieldname)) {
+    drupal_not_found();
+    return;
+  }
+  $node = node_load($nid);
+  if (!$node) {
+    drupal_not_found();
+    return;
+  }
+  // Validate field name
+  $types = content_types($node->type);
+  if (!isset($types['fields'][$fieldname]) ||
+      $types['fields'][$fieldname]['type'] != 'email' ||
+      $types['fields'][$fieldname]['widget']['link_type'] != 'form') {
+    drupal_not_found();
+    return;
+  }
+  $field = $node->$fieldname;
+  if (empty($field) || empty($field[0]['email'])) {
+    drupal_not_found();
+    return;
+  }
+
+  global $user;
+
+  if (!flood_is_allowed('email', variable_get('email_hourly_threshold', 3))) {
+    $output = t("You cannot send more than %number messages per hour. Please try again later.", array('%number' => variable_get('email_hourly_threshold', 3)));
+  }
+  else {
+    if ($user->uid) {
+      $edit['name'] = $user->name;
+      $edit['mail'] = $user->mail;
+    }
+
+    $form['#token'] = $user->name . $user->mail;
+    $form['name'] = array('#type' => 'textfield',
+      '#title' => t('Your name'),
+      '#maxlength' => 255,
+      '#default_value' => $edit['name'],
+      '#required' => TRUE,
+    );
+    $form['mail'] = array('#type' => 'textfield',
+      '#title' => t('Your e-mail address'),
+      '#maxlength' => 255,
+      '#default_value' => $edit['mail'],
+      '#required' => TRUE,
+    );
+    $form['subject'] = array('#type' => 'textfield',
+      '#title' => t('Subject'),
+      '#maxlength' => 255,
+      '#required' => TRUE,
+    );
+    $form['message'] = array('#type' => 'textarea',
+      '#title' => t('Message'),
+      '#required' => TRUE,
+    );
+    $form['copy'] = array('#type' => 'checkbox',
+      '#title' => t('Send me a copy.'),
+    );
+    $form['submit'] = array('#type' => 'submit',
+      '#value' => t('Send e-mail'),
+    );
+    $output = drupal_get_form('email_mail_page', $form);
+  }
+
+  return $output;
+}
+
+/**
+ * Validate the site-wide contact page form submission.
+ */
+function email_mail_page_validate($form_id, $form_values) {
+  if (!valid_email_address($form_values['mail'])) {
+    form_set_error('mail', t('You must enter a valid e-mail address.'));
+  }
+}
+
+/**
+ * Process the site-wide contact page form submission.
+ */
+function email_mail_page_submit($form_id, $edit) {
+  $nid = arg(1);
+  $fieldname = arg(2);
+  if (empty($nid) || empty($fieldname)) {
+    drupal_not_found();
+    return;
+  }
+  $node = node_load($nid);
+  if (!$node) {
+    drupal_not_found();
+    return;
+  }
+  // Validate field name
+  $types = content_types($node->type);
+  if (!isset($types['fields'][$fieldname]) ||
+      $types['fields'][$fieldname]['type'] != 'email' ||
+      $types['fields'][$fieldname]['widget']['link_type'] != 'form') {
+    drupal_not_found();
+    return;
+  }
+  $field = $node->$fieldname;
+  if (empty($field) || empty($field[0]['email'])) {
+    drupal_not_found();
+    return;
+  }
+  $email = $field[0]['email'];
+
+  // E-mail address of the sender: as the form field is a text field,
+  // all instances of \r and \n have been automatically stripped from it.
+  $from = $edit['mail'];
+
+  // Compose the body:
+  $message[] = t("%name sent a message using the contact form at %form.", array('%name' => $edit['name'], '%form' => url($_GET['q'], NULL, NULL, TRUE)));
+  $message[] = $edit['message'];
+
+  // Tidy up the body:
+  foreach ($message as $key => $value) {
+    $message[$key] = wordwrap($value);
+  }
+
+  // Format the category:
+  $subject = t('[%title - %contact] %subject', array('%title' => $node->title, '%contact' => $types['fields'][$fieldname]['widget']['label'], '%subject' => $edit['subject']));
+
+  // Prepare the body:
+  $body = implode("\n\n", $message);
+
+  // Send the e-mail to the recipients:
+  user_mail($email, $subject, $body, "From: $from\nReply-to: $from\nX-Mailer: Drupal\nReturn-path: $from\nErrors-to: $from");
+
+  // If the user requests it, send a copy.
+  if ($edit['copy']) {
+    user_mail($from, $subject, $body, "From: $from\nReply-to: $from\nX-Mailer: Drupal\nReturn-path: $from\nErrors-to: $from");
+  }
+
+  // Log the operation:
+  flood_register_event('email');
+  watchdog('mail', t('%name-from sent an e-mail at %form.', array('%name-from' => theme('placeholder', $edit['name'] ." <$from>"), '%form' => url($_GET['q'], NULL, NULL, TRUE))));
+
+  // Update user:
+  drupal_set_message(t('Your message has been sent.'));
+
+  // Jump to home page rather than back to contact page to avoid contradictory messages if flood control has been activated.
+  return 'node/'.$node->nid;
+}
 ?>
