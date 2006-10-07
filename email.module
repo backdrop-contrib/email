@@ -288,7 +288,7 @@ function email_mail_page_validate($form_id, $form_values) {
   if (!valid_email_address($form_values['mail'])) {
     form_set_error('mail', t('You must enter a valid e-mail address.'));
   }
-  if (preg_match("/\r|\n/", $form_values['subject']) || preg_match("/\r|\n/", $node->title)) {
+  if (preg_match("/\r|\n/", $form_values['subject'])) {
     form_set_error('subject', t('The subject cannot contain linebreaks.'));
     watchdog('mail', 'Email injection exploit attempted in email form subject: '.check_plain($form_values['subject']), WATCHDOG_NOTICE);
   }
@@ -338,7 +338,7 @@ function email_mail_page_submit($form_id, $edit) {
   }
 
   // Format the category:
-  $subject = t('[%title - %contact] %subject', array('%title' => $node->title, '%contact' => $types['fields'][$fieldname]['widget']['label'], '%subject' => $edit['subject']));
+  $subject = t('[%title - %contact] %subject', array('%title' => preg_replace("/\r|\n/",'',$node->title), '%contact' => $types['fields'][$fieldname]['widget']['label'], '%subject' => $edit['subject']));
 
   // Prepare the body:
   $body = implode("\n\n", $message);
