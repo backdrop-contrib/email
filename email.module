@@ -220,7 +220,7 @@ function email_mail_page($nid=null, $fieldname=null) {
     drupal_not_found();
     return;
   }
-  $node = node_load($nid);
+  $node = node_load(intval($nid));
   if (!$node) {
     drupal_not_found();
     return;
@@ -272,9 +272,6 @@ function email_mail_page($nid=null, $fieldname=null) {
       '#title' => t('Message'),
       '#required' => TRUE,
     );
-    $form['copy'] = array('#type' => 'checkbox',
-      '#title' => t('Send me a copy.'),
-    );
     $form['submit'] = array('#type' => 'submit',
       '#value' => t('Send e-mail'),
     );
@@ -291,13 +288,17 @@ function email_mail_page_validate($form_id, $form_values) {
   if (!valid_email_address($form_values['mail'])) {
     form_set_error('mail', t('You must enter a valid e-mail address.'));
   }
+  if (preg_match("/\r|\n/", $form_values['subject']) || preg_match("/\r|\n/", $node->title)) {
+    form_set_error('subject', t('The subject cannot contain linebreaks.'));
+    watchdog('mail', 'Email injection exploit attempted in email form subject: '.check_plain($form_values['subject']), WATCHDOG_NOTICE);
+  }
 }
 
 /**
  * Process the site-wide contact page form submission.
  */
 function email_mail_page_submit($form_id, $edit) {
-  $nid = arg(1);
+  $nid = intval(arg(1));
   $fieldname = arg(2);
   if (empty($nid) || empty($fieldname)) {
     drupal_not_found();
@@ -344,11 +345,6 @@ function email_mail_page_submit($form_id, $edit) {
 
   // Send the e-mail to the recipients:
   user_mail($email, $subject, $body, "From: $from\nReply-to: $from\nX-Mailer: Drupal\nReturn-path: $from\nErrors-to: $from");
-
-  // If the user requests it, send a copy.
-  if ($edit['copy']) {
-    user_mail($from, $subject, $body, "From: $from\nReply-to: $from\nX-Mailer: Drupal\nReturn-path: $from\nErrors-to: $from");
-  }
 
   // Log the operation:
   flood_register_event('email');
