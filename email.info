@@ -1,0 +1,5 @@
+; $Id$
+name = EMail
+description = Defines an email field type for cck
+version = "$Name$"
+package = CCK

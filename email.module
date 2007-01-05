@@ -1,5 +1,6 @@
 <?php
 
+// $Id$
 
 /**
  * Implementation of hook_help().
@@ -70,7 +71,7 @@ function email_field_formatter($field, $item, $formatter, $node) {
     if ($field['widget']['link_type'] == 'form') {
       $mailto = l(t('Email Contact Form'), 'email/'.$node->nid.'/'.$field['field_name']);
     }
-    elseif ($field['widget']['link_type'] == 'mailto_encrypt' && module_exist('invisimail')) {
+    elseif ($field['widget']['link_type'] == 'mailto_encrypt' && module_exists('invisimail')) {
       $format = $GLOBALS['invisimail_format'];
       if (!(variable_get('invisimail_link_'.$format, TRUE))) {     
         variable_set('invisimail_link_'.$format, TRUE);
@@ -118,7 +119,7 @@ function email_widget_settings($op, $widget) {
         'mailto' => t('Mailto: Direct link'), 
         'form' => t('Contact form'), 
       );
-      if (module_exist('invisimail')) {
+      if (module_exists('invisimail')) {
         $options += array('mailto_encrypt' => t('Mailto: Direct link with invisimail encryption'));
       }
       $form['link_type'] = array(
@@ -239,52 +240,56 @@ function email_mail_page($nid=null, $fieldname=null) {
     return;
   }
 
-  global $user;
-
   if (!flood_is_allowed('email', variable_get('email_hourly_threshold', 3))) {
     $output = t("You cannot send more than %number messages per hour. Please try again later.", array('%number' => variable_get('email_hourly_threshold', 3)));
   }
   else {
-    if ($user->uid) {
-      $edit['name'] = $user->name;
-      $edit['mail'] = $user->mail;
-    }
-
-    $form['#token'] = $user->name . $user->mail;
-    $form['name'] = array('#type' => 'textfield',
-      '#title' => t('Your name'),
-      '#maxlength' => 255,
-      '#default_value' => $edit['name'],
-      '#required' => TRUE,
-    );
-    $form['mail'] = array('#type' => 'textfield',
-      '#title' => t('Your e-mail address'),
-      '#maxlength' => 255,
-      '#default_value' => $edit['mail'],
-      '#required' => TRUE,
-    );
-    $form['subject'] = array('#type' => 'textfield',
-      '#title' => t('Subject'),
-      '#maxlength' => 255,
-      '#required' => TRUE,
-    );
-    $form['message'] = array('#type' => 'textarea',
-      '#title' => t('Message'),
-      '#required' => TRUE,
-    );
-    $form['submit'] = array('#type' => 'submit',
-      '#value' => t('Send e-mail'),
-    );
-    $output = drupal_get_form('email_mail_page', $form);
+    $output = drupal_get_form('email_mail_page_form');
   }
 
   return $output;
 }
 
+function email_mail_page_form() {
+  global $user;
+  
+  if ($user->uid) {
+    $edit['name'] = $user->name;
+    $edit['mail'] = $user->mail;
+  }
+
+  $form['#token'] = $user->name . $user->mail;
+  $form['name'] = array('#type' => 'textfield',
+    '#title' => t('Your name'),
+    '#maxlength' => 255,
+    '#default_value' => $edit['name'],
+    '#required' => TRUE,
+  );
+  $form['mail'] = array('#type' => 'textfield',
+    '#title' => t('Your e-mail address'),
+    '#maxlength' => 255,
+    '#default_value' => $edit['mail'],
+    '#required' => TRUE,
+  );
+  $form['subject'] = array('#type' => 'textfield',
+    '#title' => t('Subject'),
+    '#maxlength' => 255,
+    '#required' => TRUE,
+  );
+  $form['message'] = array('#type' => 'textarea',
+    '#title' => t('Message'),
+    '#required' => TRUE,
+  );
+  $form['submit'] = array('#type' => 'submit',
+    '#value' => t('Send e-mail'),
+  );
+  return $form;
+}
+
 /**
  * Validate the site-wide contact page form submission.
  */
-function email_mail_page_validate($form_id, $form_values) {
+function email_mail_page_form_validate($form_id, $form_values) {
   if (!valid_email_address($form_values['mail'])) {
     form_set_error('mail', t('You must enter a valid e-mail address.'));
   }
@@ -297,7 +302,7 @@ function email_mail_page_validate($form_id, $form_values) {
 /**
  * Process the site-wide contact page form submission.
  */
-function email_mail_page_submit($form_id, $edit) {
+function email_mail_page_form_submit($form_id, $edit) {
   $nid = intval(arg(1));
   $fieldname = arg(2);
   if (empty($nid) || empty($fieldname)) {
@@ -344,7 +349,7 @@ function email_mail_page_submit($form_id, $edit) {
   $body = implode("\n\n", $message);
 
   // Send the e-mail to the recipients:
-  user_mail($email, $subject, $body, "From: $from\nReply-to: $from\nX-Mailer: Drupal\nReturn-path: $from\nErrors-to: $from");
+  drupal_mail($fieldname, $email, $subject, $body, $from);
 
   // Log the operation:
   flood_register_event('email');
