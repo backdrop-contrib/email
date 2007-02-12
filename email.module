@@ -56,8 +56,16 @@ function email_field($op, &$node, $field, &$node_field, $teaser, $page) {
  */
 function email_field_formatter_info() {
   return array(
-    'email' => array(
-      'label' => 'Email',
+    'default' => array(
+      'label' => 'Default Email-Link',
+      'field types' => array('email'),
+    ),
+    'invisi' => array(
+      'label' => 'Email-Invisimail',
+      'field types' => array('email'),
+    ),
+    'contact' => array(
+      'label' => 'Email-Contact Form',
       'field types' => array('email'),
     ),
   );
@@ -68,10 +76,10 @@ function email_field_formatter($field, $item, $formatter, $node) {
     return '';
   }
   else {
-    if ($field['widget']['link_type'] == 'form') {
+    if ($field['widget']['link_type'] == 'form' || $formatter == 'contact') {
       $mailto = l(t('Email Contact Form'), 'email/'.$node->nid.'/'.$field['field_name']);
     }
-    elseif ($field['widget']['link_type'] == 'mailto_encrypt' && module_exists('invisimail')) {
+    elseif (($field['widget']['link_type'] == 'mailto_encrypt' || $formatter == 'invisi') && module_exists('invisimail')) {
       $format = $GLOBALS['invisimail_format'];
       if (!(variable_get('invisimail_link_'.$format, TRUE))) {     
         variable_set('invisimail_link_'.$format, TRUE);
