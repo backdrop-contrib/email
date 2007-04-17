@@ -167,10 +167,14 @@ function email_widget($op, &$node, $field, &$node_field) {
         $form[$field['field_name']]['#type'] = 'fieldset';
         $form[$field['field_name']]['#title'] = t($field['widget']['label']);
         foreach (range(0,2) as $delta) {
+          $default_value = "";
+          if (isset($field['widget']['default_value'][$delta]['email'])) {
+            $default_value = $field['widget']['default_value'][$delta]['email'];
+          }
           $form[$field['field_name']][$delta]['email'] = array(
             '#type' => 'textfield',
             '#title' => '',
-            '#default_value' => isset($node_field[$delta]['email']) ? $node_field[$delta]['email'] : $field['widget']['default_value'][$delta]['email'],
+            '#default_value' => isset($node_field[$delta]['email']) ? $node_field[$delta]['email'] : $default_value,
             '#required' => $field['required'] ? $field['required'] : FALSE,
             '#maxlength' => 255,
             '#size' => isset($field['widget']['size']) ? $field['widget']['size'] : 60,
@@ -179,10 +183,14 @@ function email_widget($op, &$node, $field, &$node_field) {
         }
       }
       else {
+        $default_value = "";
+        if (isset($field['widget']['default_value'][0]['email'])) {
+          $default_value = $field['widget']['default_value'][0]['email'];
+        }
         $form[$field['field_name']][0]['email'] = array(
           '#type' => 'textfield',
           '#title' => $field['widget']['label'],
-          '#default_value' => isset($node_field[0]['email']) ? $node_field[0]['email'] : $field['widget']['default_value'][0]['email'],
+          '#default_value' => isset($node_field[0]['email']) ? $node_field[0]['email'] : $default_value,
           '#required' => $field['required'] ? $field['required'] : FALSE,
           '#maxlength' => 255,
           '#size' => isset($field['widget']['size']) ? $field['widget']['size'] : 60,
