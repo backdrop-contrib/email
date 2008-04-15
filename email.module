@@ -339,18 +339,18 @@ function email_mail_page_form_submit($form_id, $edit) {
   // all instances of \r and \n have been automatically stripped from it.
   $from = $edit['mail'];
 
-  // Compose the body:
-  $message[] = t("%name sent a message using the contact form at %form.", array('%name' => $edit['name'], '%form' => url($_GET['q'], NULL, NULL, TRUE)));
+  // Compose the body:  
+  $message[] = t("@name sent a message using the contact form at @form.", array('@name' => $edit['name'], '@form' => url($_GET['q'], NULL, NULL, TRUE)));  
   $message[] = $edit['message'];
-
+  
   // Tidy up the body:
   foreach ($message as $key => $value) {
     $message[$key] = wordwrap($value);
   }
 
   // Format the category:
-  $subject = t('[%title - %contact] %subject', array('%title' => preg_replace("/\r|\n/",'',$node->title), '%contact' => $types['fields'][$fieldname]['widget']['label'], '%subject' => $edit['subject']));
-
+  $subject = t('[@title - @contact] @subject', array('@title' => preg_replace("/\r|\n/",'',$node->title), '@contact' => $types['fields'][$fieldname]['widget']['label'], '@subject' => $edit['subject']));
+  
   // Prepare the body:
   $body = implode("\n\n", $message);
 
