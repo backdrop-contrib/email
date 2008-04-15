@@ -354,4 +354,29 @@ function email_mail_page_form_submit($form_id, $edit) {
   // Jump to home page rather than back to contact page to avoid contradictory messages if flood control has been activated.
   return 'node/'.$node->nid;
 }
+
+/**
+ * Token Integration
+ */
+
+/**
+ * Implementation of hook token_list
+ */
+function email_token_list($type = 'all') {
+  if ($type == 'field' || $type == 'all') {
+    $tokens['email']['email'] = t("Email Address");
+    return $tokens;
+  }
+}
+
+/**
+ * Implementation of hook token_values
+ */ 
+function email_token_values($type, $object = NULL, $options = array()) {
+  if ($type == 'field') {
+    $item = $object[0];
+    $tokens['email'] = check_plain($item['email']);
+    return $tokens;
+  }
+}
 ?>
