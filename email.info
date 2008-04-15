@@ -1,5 +1,6 @@
 ; $Id$
-name = EMail
+name = Email
 description = Defines an email field type for cck
-dependencies = content
+dependencies[] = content
 package = CCK
+core = 6.x
