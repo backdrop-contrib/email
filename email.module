@@ -55,13 +55,9 @@ function email_field($op, &$node, $field, &$node_field, $teaser, $page) {
  *
  */
 function email_field_formatter_info() {
-  return array(
+  $formats = array(
     'default' => array(
       'label' => 'Default Email-Link',
-      'field types' => array('email'),
-    ),
-    'invisi' => array(
-      'label' => 'Email-Invisimail',
       'field types' => array('email'),
     ),
     'contact' => array(
@@ -69,6 +65,14 @@ function email_field_formatter_info() {
       'field types' => array('email'),
     ),
   );
+  
+  if (module_exists('invisimail')) {
+    $formats['invisi'] = array(
+      'label' => 'Email-Invisimail',
+      'field types' => array('email'),
+    );
+  }
+  return $formats;
 }
 
 function email_field_formatter($field, $item, $formatter, $node) {
@@ -76,10 +80,10 @@ function email_field_formatter($field, $item, $formatter, $node) {
     return '';
   }
   else {
-    if ($field['widget']['link_type'] == 'form' || $formatter == 'contact') {
+    if ($formatter == 'contact') {
       $mailto = l(t('Email Contact Form'), 'email/'.$node->nid.'/'.$field['field_name']);
     }
-    elseif (($field['widget']['link_type'] == 'mailto_encrypt' || $formatter == 'invisi') && module_exists('invisimail')) {
+    elseif ($formatter == 'invisi' && module_exists('invisimail')) {
       $format = $GLOBALS['invisimail_format'];
       if (!(variable_get('invisimail_link_'.$format, TRUE))) {     
         variable_set('invisimail_link_'.$format, TRUE);
@@ -123,20 +127,6 @@ function email_widget_settings($op, $widget) {
         '#description' => t('Size of textfield'),
       );
       
-      $options = array(
-        'mailto' => t('Mailto: Direct link'), 
-        'form' => t('Contact form'), 
-      );
-      if (module_exists('invisimail')) {
-        $options += array('mailto_encrypt' => t('Mailto: Direct link with invisimail encryption'));
-      }
-      $form['link_type'] = array(
-        '#type' => 'radios',
-        '#title' => t('Email Link Type'),
-        '#default_value' => isset($widget['link_type']) ? $widget['link_type'] : 'mailto',
-        '#options' => $options,
-      );
-      
       return $form;
       
     case 'validate':
@@ -146,7 +136,7 @@ function email_widget_settings($op, $widget) {
       break;
 
     case 'save':
-      return array('size', 'link_type');
+      return array('size');
   }
 }
 
@@ -246,7 +236,8 @@ function email_mail_page($nid=null, $fieldname=null) {
   $types = content_types($node->type);
   if (!isset($types['fields'][$fieldname]) ||
       $types['fields'][$fieldname]['type'] != 'email' ||
-      $types['fields'][$fieldname]['widget']['link_type'] != 'form') {
+      ($types['fields'][$fieldname]['display_settings']['teaser']['format'] != 'contact' &&
+      $types['fields'][$fieldname]['display_settings']['full']['format'] != 'contact')) {
     drupal_not_found();
     return;
   }
@@ -333,8 +324,7 @@ function email_mail_page_form_submit($form_id, $edit) {
   // Validate field name
   $types = content_types($node->type);
   if (!isset($types['fields'][$fieldname]) ||
-      $types['fields'][$fieldname]['type'] != 'email' ||
-      $types['fields'][$fieldname]['widget']['link_type'] != 'form') {
+      $types['fields'][$fieldname]['type'] != 'email') {
     drupal_not_found();
     return;
   }
