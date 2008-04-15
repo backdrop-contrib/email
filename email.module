@@ -202,11 +202,11 @@ function email_widget($op, &$node, $field, &$node_field) {
     
     case 'validate':
       if (is_array($node_field)) {
-          foreach ($node_field as $delta => $item) {
-            if ($item['email'] != '' && !valid_email_address($item['email'])) {
-              form_set_error($field['field_name'],t('"%mail" is not a valid email address',array('%mail' => $item['email'])));
-            }
+        foreach ($node_field as $delta => $item) {
+          if ($item['email'] != '' && !valid_email_address(trim($item['email']))) {
+            form_set_error($field['field_name'],t('"%mail" is not a valid email address',array('%mail' => $item['email'])));
           }
+        }
       }
       break;
   }           
