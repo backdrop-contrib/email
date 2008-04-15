@@ -30,25 +30,12 @@ function email_field_settings($op, $field) {
   switch ($op) {
     case 'database columns':
       $columns = array(
-        'email' => array('type' => 'varchar', 'length' => 255, 'not null' => TRUE),
+        'email' => array('type' => 'varchar', 'length' => 255, 'not null' => TRUE, 'default' => "''"),
       );
       return $columns;
   }
 }
 
-
-/**
- * Implementation of hook_field().
- */
-function email_field($op, &$node, $field, &$node_field, $teaser, $page) {
-  switch ($op) {
-    case 'view':     
-      foreach ($node_field as $delta => $item) {
-        $node_field[$delta]['view'] = content_format($field, $item, 'email', $node);
-      }
-      return theme('field', $node, $field, $node_field, $teaser, $page);
-  }
-}
 
 /**
  * Implementation of hook_field_formatter_info().
