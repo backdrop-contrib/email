@@ -2,15 +2,6 @@
 
 // $Id$
 
-/**
- * Implementation of hook_help().
- */
-function email_help($section) {
-  switch ($section) {
-    case 'admin/modules#description':
-      return t('Defines a field type for email addresses. <em>Note: Requires content.module.</em>');
-  }
-}
 
 /**
  * Implementation of hook_theme().
@@ -59,17 +50,20 @@ function email_field_settings($op, $field) {
   }
 }
 
+/**
+ * Implementation of hook_field().
+ */
 function email_field($op, &$node, $field, &$items, $teaser, $page) {
-   switch ($op) {
+  switch ($op) {
     case 'validate':
       if (is_array($items)) {
-          foreach ($items as $delta => $item) {
-            if ($item['email'] != '' && !valid_email_address(trim($item['email']))) {
-              form_set_error($field['field_name'],t('"%mail" is not a valid email address',array('%mail' => $item['email'])));
-            }
+        foreach ($items as $delta => $item) {
+          if ($item['email'] != '' && !valid_email_address(trim($item['email']))) {
+            form_set_error($field['field_name'],t('"%mail" is not a valid email address',array('%mail' => $item['email'])));
           }
-       }
-      break;
+        }
+     }
+     break;
 
     case 'sanitize':
       foreach ($items as $delta => $item) {
@@ -226,6 +220,7 @@ function email_textfield_process($element, $edit, $form_state, $form) {
     '#title' => t($field['widget']['label']),
     '#description' => t($field['widget']['description']),
     '#required' => $element['#required'],
+    '#maxlength' => 255,
     '#default_value' => isset($element['#value'][$field_key]) ? $element['#value'][$field_key] : NULL,
   );
   return $element;
@@ -289,6 +284,9 @@ function email_mail_page($nid, $fieldname) {
   return $output;
 }
 
+/**
+ * Contact form
+ */
 function email_mail_page_form($form_state, $node, $field) {
   global $user;
 
@@ -407,16 +405,14 @@ function email_mail($key, &$message, $params) {
   }
 }
 
-/**
- * Token Integration
- */
 
 /**
  * Implementation of hook token_list
  */
 function email_token_list($type = 'all') {
   if ($type == 'field' || $type == 'all') {
-    $tokens['email']['email'] = t("Email Address");
+    $tokens['email']['raw']       = t('Raw email address');
+    $tokens['email']['formatted'] = t('Formatted email address');
     return $tokens;
   }
 }
@@ -427,8 +423,8 @@ function email_token_list($type = 'all') {
 function email_token_values($type, $object = NULL, $options = array()) {
   if ($type == 'field') {
     $item = $object[0];
-    $tokens['email'] = check_plain($item['email']);
+    $tokens['raw']       = $item['email'];
+    $tokens['formatted'] = $item['view'];
     return $tokens;
   }
 }
-?>
