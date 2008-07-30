@@ -244,8 +244,8 @@ function email_menu() {
     'title' => t('Email Contact Form'),
     'page callback' => 'email_mail_page',
     'page arguments' => array(1, 2),
-    'access callback' => 'node_access',
-    'access arguments' => array('view', 1),
+    'access callback' => 'user_access',
+    'access arguments' => array('access content'),
     'type' => MENU_CALLBACK,
   );
   return $items;
