@@ -255,7 +255,7 @@ function email_menu() {
 /**
  * The contact form page.
  */
-function email_mail_page($nid, $fieldname) {
+function email_mail_page($nid, $field_name) {
   if (!is_numeric($nid)) {
     drupal_not_found();
     return;
@@ -265,13 +265,16 @@ function email_mail_page($nid, $fieldname) {
     drupal_not_found();
     return;
   }
+  $field = $node->$field_name;
+  $email = $field[0]['email'];
   $types = content_types($node->type);
   // Validate field name
   $types = content_types($node->type);
-  if (!isset($types['fields'][$fieldname]) ||
-      $types['fields'][$fieldname]['type'] != 'email' ||
-      ($types['fields'][$fieldname]['display_settings']['teaser']['format'] != 'contact' &&
-      $types['fields'][$fieldname]['display_settings']['full']['format'] != 'contact')) {
+  if (empty($email) ||
+      !isset($types['fields'][$field_name]) ||
+      $types['fields'][$field_name]['type'] != 'email' ||
+      ($types['fields'][$field_name]['display_settings']['teaser']['format'] != 'contact' &&
+      $types['fields'][$field_name]['display_settings']['full']['format'] != 'contact')) {
     drupal_not_found();
     return;
   }
@@ -281,7 +284,7 @@ function email_mail_page($nid, $fieldname) {
     $output = t("You cannot send more than %number messages per hour. Please try again later.", array('%number' => variable_get('email_hourly_threshold', 3)));
   }
   else {
-    $output = drupal_get_form('email_mail_page_form', $node, $field);
+    $output = drupal_get_form('email_mail_page_form', $node, $field_name, $email);
   }
 
   return $output;
@@ -290,18 +293,21 @@ function email_mail_page($nid, $fieldname) {
 /**
  * Contact form
  */
-function email_mail_page_form($form_state, $node, $field) {
+function email_mail_page_form($form_state, $node, $field_name, $email) {
   global $user;
 
   $form['node'] = array(
     '#type' => 'value',
     '#value' => $node,
   );
-  $form['field'] = array(
+  $form['field_name'] = array(
     '#type' => 'value',
-    '#value' => $field,
+    '#value' => $field_name,
   );
-
+  $form['email'] = array(
+    '#type' => 'value',
+    '#value' => $email,
+  );
   $form['name'] = array(
     '#type' => 'textfield',
     '#title' => t('Your name'),
@@ -354,10 +360,9 @@ function email_mail_page_form_validate($form, &$form_state) {
  */
 function email_mail_page_form_submit($form, &$form_state) {
   $node = $form_state['values']['node'];
-  $field = $form_state['values']['field'];
-  $email = $field[0]['email'];
-  $types = content_types($node->type);
- 
+  $field_name = $form_state['values']['field_name'];
+  $email = $form_state['values']['email'];
+  
   // E-mail address of the sender: as the form field is a text field,
   // all instances of \r and \n have been automatically stripped from it.
 
