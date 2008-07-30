@@ -67,7 +67,7 @@ function email_field($op, &$node, $field, &$items, $teaser, $page) {
 
     case 'sanitize':
       foreach ($items as $delta => $item) {
-        $items[$delta]['nid'] = $node->nid;
+        $items[$delta]['safe'] = check_plain($item['email']);
       }
       break;
   }
@@ -116,7 +116,7 @@ function email_field_formatter_info() {
  * Theme function for 'default' email field formatter.
  */
 function theme_email_formatter_default($element) {
-  return '<a href="mailto:'. $element['#item']['email'] .'">'. check_plain($element['#item']['email']) .'</a>';
+  return '<a href="mailto:'. $element['#item']['email'] .'">'. $element['#item']['safe'] .'</a>';
 }
 
 /**
@@ -127,7 +127,7 @@ function theme_email_formatter_spamspan($element) {
     return spamspan($element['#item']['email']);
   }
   else {
-    return '<a href="mailto:'. $element['#item']['email'] .'">'. check_plain($element['#item']['email']) .'</a>';
+    return '<a href="mailto:'. $element['#item']['email'] .'">'. $element['#item']['safe'] .'</a>';
   }
 }
 
@@ -135,7 +135,7 @@ function theme_email_formatter_spamspan($element) {
  * Theme function for 'contact' email field formatter.
  */
 function theme_email_formatter_contact($element) {
-  return l(t('Email contact form'), 'email/'. $element['#item']['nid'] .'/'. $element['#field_name']);
+  return l(t('Email contact form'), 'email/'. $element['#node']->nid .'/'. $element['#field_name']);
 }
 
 
