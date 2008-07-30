@@ -29,7 +29,7 @@ function email_theme() {
 function email_field_info() {
   return array(
     'email' => array(
-      'label' => 'E-Mail',
+      'label' => 'Email',
       'callbacks' => array(
         'tables' => CONTENT_CALLBACK_DEFAULT,
         'arguments' => CONTENT_CALLBACK_DEFAULT,
@@ -45,7 +45,7 @@ function email_field_info() {
 function email_field_settings($op, $field) {
   switch ($op) {
     case 'database columns':
-      $columns['email'] = array('type' => 'varchar', 'length' => 255, 'not null' => FALSE);
+      $columns['email'] = array('type' => 'varchar', 'length' => 255, 'not null' => FALSE, 'sortable' => TRUE);
       return $columns;
   }
 }
@@ -224,6 +224,7 @@ function email_textfield_process($element, $edit, $form_state, $form) {
     '#description' => t($field['widget']['description']),
     '#required' => $element['#required'],
     '#maxlength' => 255,
+    '#size' => isset($field['widget']['size']) ? $field['widget']['size'] : 60,
     '#default_value' => isset($element['#value'][$field_key]) ? $element['#value'][$field_key] : NULL,
   );
   return $element;
@@ -259,6 +260,12 @@ function email_mail_page($nid, $field_name) {
   if (!is_numeric($nid)) {
     drupal_not_found();
     return;
+  }
+  if (module_exists('content_permissions')) {
+    if (!user_access('view '. $field_name)) {
+      drupal_not_found();
+      return;
+    }
   }
   $node = node_load(intval($nid));
   if (!$node) {
