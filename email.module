@@ -116,13 +116,16 @@ function email_field_formatter_info() {
  * Theme function for 'default' email field formatter.
  */
 function theme_email_formatter_default($element) {
-  return '<a href="mailto:'. $element['#item']['email'] .'">'. $element['#item']['safe'] .'</a>';
+  return !empty($element['#item']['safe']) ? '<a href="mailto:'. $element['#item']['email'] .'">'. $element['#item']['safe'] .'</a>' : '';
 }
 
 /**
  * Theme function for 'spamspan' email field formatter.
  */
 function theme_email_formatter_spamspan($element) {
+  if (empty($element['#item']['safe'])) {
+    return '';
+  }
   if (module_exists('spamspan')) {
     return spamspan($element['#item']['email']);
   }
@@ -135,7 +138,7 @@ function theme_email_formatter_spamspan($element) {
  * Theme function for 'contact' email field formatter.
  */
 function theme_email_formatter_contact($element) {
-  return l(t('Email contact form'), 'email/'. $element['#node']->nid .'/'. $element['#field_name']);
+  return !empty($element['#item']['safe']) ? l(t('Email contact form'), 'email/'. $element['#node']->nid .'/'. $element['#field_name']) : '';
 }
 
 
