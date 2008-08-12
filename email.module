@@ -178,25 +178,25 @@ function email_elements() {
 function email_widget_settings($op, $widget) {
   switch ($op) {
     case 'form':
-      $form = array();
+      $size = (isset($widget['size']) && is_numeric($widget['size'])) ? $widget['size'] : 60;
       $form['size'] = array(
         '#type' => 'textfield',
-        '#title' => t('Size'),
-        '#default_value' => isset($widget['size']) ? $widget['size'] : 60,
-        '#required' => FALSE,
-        '#description' => t('Size of textfield'),
+        '#title' => t('Size of textfield'),
+        '#default_value' => $size,
+        '#element_validate' => array('_email_widget_settings_size_validate'),
+        '#required' => TRUE,
       );
-      
       return $form;
       
-    case 'validate':
-      if (!empty($widget['size']) && (!is_numeric($widget['size']) || intval($widget['size']) != $widget['size'] || $widget['size'] <= 0)) {
-        form_set_error('size', t('"Size" must be a positive integer.'));
-      }
-      break;
-
     case 'save':
       return array('size');
+  }
+}
+
+function _email_widget_settings_size_validate($element, &$form_state) {
+  $value = $form_state['values']['size'];
+  if (!is_numeric($value) || intval($value) != $value || $value <= 0) {
+    form_error($element, t('"Size" must be a positive integer.'));
   }
 }
 
@@ -224,7 +224,8 @@ function email_textfield_process($element, $edit, $form_state, $form) {
     '#description' => t($field['widget']['description']),
     '#required' => $element['#required'],
     '#maxlength' => 255,
-    '#size' => isset($field['widget']['size']) ? $field['widget']['size'] : 60,
+    '#size' => !empty($field['widget']['size']) ? $field['widget']['size'] : 60,
+    '#attributes' => array('class' => 'text'),
     '#default_value' => isset($element['#value'][$field_key]) ? $element['#value'][$field_key] : NULL,
   );
   return $element;
