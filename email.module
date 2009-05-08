@@ -243,12 +243,19 @@ function theme_email_textfield($element) {
  */
 function email_menu() {
   $items['email/%/%'] = array(
-    'title' => t('Email Contact Form'),
+    'title' => 'Email Contact Form',
     'page callback' => 'email_mail_page',
     'page arguments' => array(1, 2),
     'access callback' => 'user_access',
     'access arguments' => array('access content'),
     'type' => MENU_CALLBACK,
+  );
+  $items['admin/settings/email'] = array(
+    'title' => 'CCK Email Contact Form Settings',
+    'description' => 'Administer flood control settings for email contact forms',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('email_admin_settings'),
+    'access arguments' => array('administer site configuration'),
   );
   return $items;
 }
@@ -443,4 +450,17 @@ function email_token_values($type, $object = NULL, $options = array()) {
     $tokens['formatted'] = $item['view'];
     return $tokens;
   }
+}
+
+/**
+ * Settings for contact form
+ */
+function email_admin_settings() {
+  $form['email_hourly_threshold'] = array('#type' => 'select',
+    '#title' => t('Hourly threshold for a CCK Email contact form'),
+    '#options' => drupal_map_assoc(array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40, 50)),
+    '#default_value' => variable_get('email_hourly_threshold', 3),
+    '#description' => t('The maximum number of contact form submissions a user can perform per hour.'),
+  );
+  return system_settings_form($form);
 }
