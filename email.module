@@ -221,7 +221,7 @@ function email_textfield_process($element, $edit, $form_state, $form) {
   $element[$field_key] = array(
     '#type' => 'textfield',
     '#title' => t($field['widget']['label']),
-    '#description' => t($field['widget']['description']),
+    '#description' => content_filter_xss(t($field['widget']['description'])),
     '#required' => $element['#required'],
     '#maxlength' => 255,
     '#size' => !empty($field['widget']['size']) ? $field['widget']['size'] : 60,
