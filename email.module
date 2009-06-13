@@ -225,7 +225,7 @@ function email_textfield_process($element, $edit, $form_state, $form) {
     '#required' => $element['#required'],
     '#maxlength' => 255,
     '#size' => !empty($field['widget']['size']) ? $field['widget']['size'] : 60,
-    '#attributes' => array('class' => 'text'),
+    '#attributes' => array('class' => 'text', 'dir' => 'ltr'),
     '#default_value' => isset($element['#value'][$field_key]) ? $element['#value'][$field_key] : NULL,
   );
   return $element;
