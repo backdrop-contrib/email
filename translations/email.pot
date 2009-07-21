@@ -1,140 +1,137 @@
 # $Id$
 #
-# French translation of Drupal (general)
+# LANGUAGE translation of Drupal (general)
 # Copyright YEAR NAME <EMAIL@ADDRESS>
 # Generated from files:
-#  email.module,v 1.9.2.8.4.8 2008/08/12 08:12:02 mh86
+#  email.module,v 1.9.2.8.4.12 2009/06/13 19:01:32 mh86
 #  email.info,v 1.1.2.2.4.1 2008/04/15 19:23:59 mh86
 #
+#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: French translation for drupal6 email module\n"
+"Project-Id-Version: PROJECT VERSION\n"
 "POT-Creation-Date: 2009-07-21 10:50+0200\n"
-"PO-Revision-Date: 2009-07-21 10:58+0100\n"
-"Last-Translator: Sylvain Moreau <sylvain.moreau@ows.fr>\n"
-"Language-Team: Sylvain Moreau, OWS <sylvain.moreau@ows.fr>\n"
+"PO-Revision-Date: YYYY-mm-DD HH:MM+ZZZZ\n"
+"Last-Translator: NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <EMAIL@ADDRESS>\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=0; plural=;\n"
-"X-Poedit-Language: French\n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
 
 #: email.module:62
 msgid "\"%mail\" is not a valid email address"
-msgstr "\"%mail\" n'est pas une adresse e-mail valide"
+msgstr ""
 
 #: email.module:93
 msgid "Default email link"
-msgstr "Lien e-mail par défaut"
+msgstr ""
 
 #: email.module:98;141
 msgid "Email contact form"
-msgstr "Formulaire de contact e-mail"
+msgstr ""
 
 #: email.module:106
 msgid "Email SpamSpan"
-msgstr "E-mail Spamspan"
+msgstr ""
 
 #: email.module:151
 msgid "Text field"
-msgstr "Champ texte"
+msgstr ""
 
 #: email.module:184
 msgid "Size of textfield"
-msgstr "Taille du champ texte"
+msgstr ""
 
 #: email.module:199
 msgid "\"Size\" must be a positive integer."
-msgstr "\"Taille\" doit être un entier positif."
+msgstr ""
 
 #: email.module:299
 msgid "You cannot send more than %number messages per hour. Please try again later."
-msgstr "Vous ne pouvez pas envoyer plus de %number messages par heure. Veuillez réessayer plus tard."
+msgstr ""
 
 #: email.module:328
 msgid "Your name"
-msgstr "Votre nom"
+msgstr ""
 
 #: email.module:335
 msgid "Your e-mail address"
-msgstr "Votre adresse e-mail"
+msgstr ""
 
 #: email.module:342
 msgid "Subject"
-msgstr "Sujet"
+msgstr ""
 
 #: email.module:348
 msgid "Message"
-msgstr "Message"
+msgstr ""
 
 #: email.module:353
 msgid "Send e-mail"
-msgstr "Envoyer un e-mail"
+msgstr ""
 
 #: email.module:365
 msgid "You must enter a valid e-mail address."
-msgstr "Vous devez saisir une adresse e-mail valide."
+msgstr ""
 
 #: email.module:368
 msgid "The subject cannot contain linebreaks."
-msgstr "Le sujet ne peut pas contenir de retours à la ligne."
+msgstr ""
 
 #: email.module:397
 msgid "%name-from sent an e-mail at %form."
-msgstr "%name-from a envoyé un e-mail depuis le formulaire %form."
+msgstr ""
 
 #: email.module:400
 msgid "Your message has been sent."
-msgstr "Votre message a été envoyé."
+msgstr ""
 
 #: email.module:415
 msgid "@name sent a message using the contact form at @node."
-msgstr "@name a envoyé un message en utilisant le formulaire de contact de @node."
+msgstr ""
 
 #: email.module:426
 msgid "[@title] @subject"
-msgstr "[@title] @subject"
+msgstr ""
 
 #: email.module:437
 msgid "Raw email address"
-msgstr "Adresse e-mail brute"
+msgstr ""
 
 #: email.module:438
 msgid "Formatted email address"
-msgstr "Adresse e-mail formatée"
+msgstr ""
 
 #: email.module:460
 msgid "Hourly threshold for a CCK Email contact form"
-msgstr "Seuil horaire pour le un formulaire de contact CCK E-mail"
+msgstr ""
 
 #: email.module:463
 msgid "The maximum number of contact form submissions a user can perform per hour."
-msgstr "Le nombre maximum de soumissions de formulaire de contact qu'un utilisateur puisse accomplir par heure."
+msgstr ""
 
 #: email.module:246
 msgid "Email Contact Form"
-msgstr "Formulaire de Contact E-Mail"
+msgstr ""
 
 #: email.module:254
 msgid "CCK Email Contact Form Settings"
-msgstr "Paramètres pour le Formulaire de Contact CCK E-Mail"
+msgstr ""
 
 #: email.module:255
 msgid "Administer flood control settings for email contact forms"
-msgstr "Administrer les paramètres de contrôle de flood pour les formulaires de contact e-mail"
+msgstr ""
 
 #: email.info:0
 msgid "Email"
-msgstr "E-mail"
+msgstr ""
 
 #: email.info:0
 msgid "Defines an email field type for cck"
-msgstr "Définit un type de champ e-mail pour cck"
+msgstr ""
 
 #: email.info:0
 msgid "CCK"
-msgstr "CCK"
-
-#~ msgid "email"
-#~ msgstr "e-mail"
+msgstr ""
 
