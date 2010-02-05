@@ -4,13 +4,7 @@
 
 DESCRIPTION:
 ------------
-This module provides an email field type for CCK.
-
-
-REQUIREMENTS:
--------------
-The email.module requires the content.module to be installed.
-optional modules: invisimail, spamspan, token, views
+This module provides an email field type.
 
 
 INSTALLATION:

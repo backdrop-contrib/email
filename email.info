@@ -1,6 +1,6 @@
 ; $Id$
 name = Email
-description = Defines an email field type for cck
-dependencies[] = content
-package = CCK
-core = 6.x
+description = Defines an email field type.
+core = 7.x
+files[] = email.module
+files[] = email.install
