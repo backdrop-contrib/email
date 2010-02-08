@@ -49,28 +49,7 @@ function email_field_validate($obj_type, $object, $field, $instance, $langcode, 
     }
   }
 }
-/**
- * Implementation of hook_field().
- */
-function email_field($op, &$node, $field, &$items, $teaser, $page) {
-  switch ($op) {
-    case 'validate':
-      if (is_array($items)) {
-        foreach ($items as $delta => $item) {
-          if ($item['email'] != '' && !valid_email_address(trim($item['email']))) {
-            form_set_error($field['field_name'],t('"%mail" is not a valid email address',array('%mail' => $item['email'])));
-          }
-        }
-     }
-     break;
 
-    case 'sanitize':
-      foreach ($items as $delta => $item) {
-        $items[$delta]['safe'] = check_plain($item['email']);
-      }
-      break;
-  }
-}
 
 /**
  * Implements of hook_content_is_empty().
@@ -185,39 +164,6 @@ function email_field_widget_form(&$form, &$form_state, $field, $instance, $langc
     '#size' => $instance['widget']['settings']['size'],
     '#prefix' => '<div class="text-full-wrapper">',
     '#suffix' => '</div>',
-  );
-  return $element;
-}
-
-
-
-/**
- * Implementation of hook_widget().
- */
-function email_widget(&$form, &$form_state, $field, $items, $delta = 0) {
-  $element = array(
-    '#type' => $field['widget']['type'],
-    '#default_value' => isset($items[$delta]) ? $items[$delta] : '',
-  );
-  return $element;
-}
-
-/**
- * Process an individual element.
- */
-function email_textfield_process($element, $edit, $form_state, $form) {
-  $field = $form['#field_info'][$element['#field_name']];
-  $field_key = $element['#columns'][0];
-  $delta = $element['#delta'];
-  $element[$field_key] = array(
-    '#type' => 'textfield',
-    '#title' => $element['#title'],
-    '#description' => content_filter_xss($field['widget']['description']),
-    '#required' => $element['#required'],
-    '#maxlength' => 255,
-    '#size' => !empty($field['widget']['size']) ? $field['widget']['size'] : 60,
-    '#attributes' => array('class' => 'text', 'dir' => 'ltr'),
-    '#default_value' => isset($element['#value'][$field_key]) ? $element['#value'][$field_key] : NULL,
   );
   return $element;
 }
