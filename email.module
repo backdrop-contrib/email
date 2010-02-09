@@ -101,9 +101,9 @@ function email_field_formatter_view($object_type, $object, $field, $instance, $l
       break;
       
     case 'contact':
+      $ids = entity_extract_ids($object_type, $object);
       foreach ($items as $delta => $item) {
-        //TODO at the moment only nodes as object type
-        $element[$delta] = l(t('Email contact form'), 'email/'. $object->nid .'/'. $instance['field_name']);
+        $element[$delta] = l(t('Email contact form'), 'email/'. $object_type .'/'. $ids[0] .'/'. $instance['field_name']);
       }
       break;
       
@@ -172,10 +172,10 @@ function email_field_widget_form(&$form, &$form_state, $field, $instance, $langc
  * Implementation of hook_menu().
  */
 function email_menu() {
-  $items['email/%/%'] = array(
+  $items['email/%/%/%'] = array(
     'title' => 'Email Contact Form',
     'page callback' => 'email_mail_page',
-    'page arguments' => array(1, 2),
+    'page arguments' => array(1, 2, 3),
     'access callback' => 'user_access',
     'access arguments' => array('access content'),
     'type' => MENU_CALLBACK,
@@ -194,62 +194,77 @@ function email_menu() {
 /**
  * The contact form page.
  */
-function email_mail_page($nid, $field_name) {
-  if (!is_numeric($nid)) {
+function email_mail_page($object_type, $object_id, $field_name) {
+  global $user;
+  
+  if (!is_numeric($object_id)) {
     drupal_not_found();
     return;
   }
-  if (module_exists('content_permissions')) {
-    if (!user_access('view '. $field_name)) {
+  
+  //verify this is an email field
+  $field_info = field_info_field($field_name);
+  if ($field_info['type'] != 'email') {
+    drupal_not_found();
+    return;
+  }
+  
+  $objects = entity_load($object_type, array($object_id));
+  $object = $objects[$object_id];
+  
+  //verify the object really exists
+  if (!$object) {
+    drupal_not_found();
+    return;
+  }
+  
+  //check field perm
+  if (module_exists('field_permissions')) {
+    if (!field_permissions_field_access('view', $field_info, $object_type, $object, $user)) {
       drupal_not_found();
       return;
     }
   }
-  $node = node_load(intval($nid));
-  if (!$node) {
+  
+  //use the first email address as receiver
+  $field = array_pop($object->$field_name);
+  $email = $field[0]['email'];
+
+  //verify that the email address is not empty
+  if (empty($email)) {
     drupal_not_found();
     return;
   }
-  $field = array_pop($node->$field_name);
-  $email = $field[0]['email'];
   
-  //TODO
-  /*$types = content_types($node->type);
-  // Validate field name
-  $types = content_types($node->type);
-  if (empty($email) ||
-      !isset($types['fields'][$field_name]) ||
-      $types['fields'][$field_name]['type'] != 'email' ||
-      ($types['fields'][$field_name]['display_settings']['teaser']['format'] != 'contact' &&
-      $types['fields'][$field_name]['display_settings']['full']['format'] != 'contact')) {
+  $entity_info = entity_extract_ids($object_type, $object);
+  $settings = field_info_instance($object_type, $field_name, $entity_info[2]);
+  
+  //verify that the contact formatter is enabled
+  if ($settings['display']['full']['type'] != 'contact' && $settings['display']['full']['teaser'] != 'contact') {
     drupal_not_found();
     return;
-  }*/
-
+  }
 
   if (!flood_is_allowed('email', variable_get('email_hourly_threshold', 3))) {
-    $output = t("You cannot send more than %number messages per hour. Please try again later.", array('%number' => variable_get('email_hourly_threshold', 3)));
+    return t("You cannot send more than %number messages per hour. Please try again later.", array('%number' => variable_get('email_hourly_threshold', 3)));
   }
-  else {
-    $output = drupal_get_form('email_mail_page_form', $node, $field_name, $email);
-  }
-
-  return $output;
+  
+  return drupal_get_form('email_mail_page_form', $object_type, $object_id, $field_name, $email);
 }
 
 /**
  * Contact form
  */
-function email_mail_page_form($form_state, $args) {
+function email_mail_page_form($form, $form_state, $object_type, $object_id, $field_name, $email) {
   global $user;
-  
-  $node = $args['build_info']['args'][0];
-  $field_name = $args['build_info']['args'][1];
-  $email = $args['build_info']['args'][2];
-  
-  $form['nid'] = array(
+
+  $form['object_id'] = array(
     '#type' => 'value',
-    '#value' => $node->nid,
+    '#value' => $object_id,
+  );
+  $form['object_type'] = array(
+    '#type' => 'value',
+    '#value' => $object_type,
   );
   $form['field_name'] = array(
     '#type' => 'value',
@@ -310,33 +325,41 @@ function email_mail_page_form_validate($form, &$form_state) {
  * Process the site-wide contact page form submission.
  */
 function email_mail_page_form_submit($form, &$form_state) {
-  $node = node_load($form_state['values']['nid']);
+  $object_type = $form_state['values']['object_type'];
+  $object_id = $form_state['values']['object_id'];
   $field_name = $form_state['values']['field_name'];
   $email = $form_state['values']['email'];
+  
+  //load entity
+  $objects = entity_load($object_type, array($object_id));
+  $object = $objects[$object_id];
+  $object_info = entity_get_info($object_type);
   
   // E-mail address of the sender: as the form field is a text field,
   // all instances of \r and \n have been automatically stripped from it.
 
   $from = $form_state['values']['mail'];
  
-  $params['node'] = $node;
+  $params['object'] = $object;
   $params['subject'] = $form_state['values']['subject'];
   $params['name'] = $form_state['values']['name'];
   $params['message'] = $form_state['values']['message'];
-  $params['url'] = url('node/' . $node->nid, array('absolute' => TRUE));
-   
+  
+  $path = "";
+  if (isset($object_info['path callback']) && function_exists($object_info['path callback'])) {
+    $path = $object_info['path callback']($object);
+  }
+  $params['url'] = url($path, array('absolute' => TRUE));
+  
   // Send the e-mail to the recipients:
   drupal_mail('email', 'contact', $email, language_default(), $params, $from);
  
   // Log the operation:
   flood_register_event('email');
-  watchdog('mail', t('%name-from sent an e-mail at %form.', array('%name-from' => theme('placeholder', $form_state['values']['name'] ." <$from>"), '%form' => url($_GET['q'], array('absolute' => TRUE)))));
- 
-  // Update user:
+  watchdog('mail', t('%name-from sent an e-mail at %form.', array('%name-from' => $form_state['values']['name'], '%form' => url($_GET['q'], array('absolute' => TRUE)))));
+  
   drupal_set_message(t('Your message has been sent.'));
- 
-  // Jump to home page rather than back to contact page to avoid contradictory messages if flood control has been activated.
-  $form_state['redirect'] = 'node/'. $node->nid;
+  $form_state['redirect'] = $path;
 }
 
 /**
@@ -346,20 +369,17 @@ function email_mail($key, &$message, $params) {
   $language = $message['language'];
   switch($key) {
     case 'contact':
-      $node = $params['node'];
       // Compose the body:
-      $msg[] = t('@name sent a message using the contact form at @node.', array('@name' => $params['name'], '@node' => $params['url']), array('langcode' =>$language->language));
-      $msg[] = $params['message'];
-
-      // Tidy up the body:
-      foreach ($msg as $index_key => $value) {
-        $msg[$index_key] = wordwrap($value);
-      }
-
-      // Prepare the body:
-      $message['body'] = implode("\n\n", $msg);
+      $message['body'][] = t('@name sent a message using the contact form at @url.', array('@name' => $params['name'], '@url' => $params['url']), array('langcode' =>$language->language));
+      $message['body'][] = $params['message'];
       
-      $message['subject'] = t('[@title] @subject', array('@title' => preg_replace("/\r|\n/",'', $node->title), '@subject' => $params['subject']), array('langcode' =>$language->language));
+      $message['subject'] = "";      
+      //include the title of the entity, if one exists
+      $object = $params['object'];
+      if (isset($object->title) && !empty($object->title)) {
+        $message['subject'] = "[". check_plain(preg_replace("/\r|\n/",'', $object->title)) ."]";
+      }
+      $message['subject'] .= " " . check_plain($params['subject']);
       break;
   }
 }
