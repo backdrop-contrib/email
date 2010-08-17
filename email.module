@@ -75,6 +75,10 @@ function email_field_formatter_info() {
       'label' => t('Email contact form'),
       'field types' => array('email'),
     ),
+    'plain' => array(
+      'label' => t('Email plain text'),
+      'field types' => array('email'),
+    ),
   );
   if (module_exists('spamspan')) {
     $formats += array(
@@ -106,7 +110,13 @@ function email_field_formatter_view($object_type, $object, $field, $instance, $l
         $element[$delta] = l(t('Email contact form'), 'email/'. $object_type .'/'. $ids[0] .'/'. $instance['field_name']);
       }
       break;
-      
+    
+    case 'plain':
+      foreach ($items as $delta => $item) {
+        $element[$delta] = array('#markup' => check_plain($item['email']));
+      }
+      break;
+    
     case 'spamspan':
       foreach ($items as $delta => $item) {
         if (module_exists('spamspan')) {
