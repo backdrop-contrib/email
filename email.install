@@ -1,2 +1,16 @@
 <?php
 
+/**
+ * Implements hook_field_schema().
+ */
+function email_field_schema($field) {
+  return array(
+    'columns' => array(
+      'email' => array(
+        'type' => 'varchar',
+         'length' => 255,
+         'not null' => FALSE,
+      ),
+    ),
+  );
+}
