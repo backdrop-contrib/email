@@ -1,5 +1,12 @@
 <?php
 
+// $Id$
+
+/**
+ * @file
+ * Defines schema for email fields
+ */
+
 /**
  * Implements hook_field_schema().
  */
