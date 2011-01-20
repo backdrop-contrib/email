@@ -52,22 +52,25 @@ function email_field_is_empty($item, $field) {
  */
 function email_field_formatter_info() {
   $formats = array(
-    'default' => array(
+    'email_default' => array(
       'label' => t('Default email link'),
+      'description' => t('Display the email address as a mailto link.'),
       'field types' => array('email'),
     ),
-    'contact' => array(
+    'email_contact' => array(
       'label' => t('Email contact form'),
+      'description' => t('Display a contact form.'),
       'field types' => array('email'),
     ),
-    'plain' => array(
+    'email_plain' => array(
       'label' => t('Email plain text'),
+      'description' => t('Display the email address as plain text.'),
       'field types' => array('email'),
     ),
   );
   if (module_exists('spamspan')) {
     $formats += array(
-      'spamspan' => array(
+      'email_spamspan' => array(
         'label' => t('Email SpamSpan'),
         'field types' => array('email'),
       ),
@@ -82,27 +85,29 @@ function email_field_formatter_info() {
 function email_field_formatter_view($object_type, $object, $field, $instance, $langcode, $items, $display) {
   $element = array();
   switch ($display['type']) {
-    case 'default':
+    case 'email_default':
       foreach ($items as $delta => $item) {
         $output = l($item['email'], 'mailto:'. $item['email']);
         $element[$delta] = array('#markup' => $output);
       }
       break;
       
-    case 'contact':
+    case 'email_contact':
       $ids = entity_extract_ids($object_type, $object);
       foreach ($items as $delta => $item) {
-        $element[$delta] = l(t('Email contact form'), 'email/'. $object_type .'/'. $ids[0] .'/'. $instance['field_name']);
+        $element[$delta] = array('#markup' => l(t('Contact person by email'), 'email/'. $object_type .'/'. $ids[0] .'/'. $instance['field_name']));
+// since email is always sent to first item's email, break after any email address found
+        break;
       }
       break;
     
-    case 'plain':
+    case 'email_plain':
       foreach ($items as $delta => $item) {
         $element[$delta] = array('#markup' => check_plain($item['email']));
       }
       break;
     
-    case 'spamspan':
+    case 'email_spamspan':
       foreach ($items as $delta => $item) {
         if (module_exists('spamspan')) {
           $element[$delta] = spamspan($item['email']);
@@ -181,6 +186,7 @@ function email_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('email_admin_settings'),
     'access arguments' => array('administer site configuration'),
+    'type' => MENU_CALLBACK,
   );
   return $items;
 }
@@ -191,7 +197,7 @@ function email_menu() {
  */
 function email_mail_page($object_type, $object_id, $field_name) {
   global $user;
-  
+
   if (!is_numeric($object_id)) {
     drupal_not_found();
     return;
@@ -223,7 +229,12 @@ function email_mail_page($object_type, $object_id, $field_name) {
   
   //use the first email address as receiver
   $field = array_pop($object->$field_name);
-  $email = $field[0]['email'];
+  foreach ($field as $delta => $item) {
+    if (!empty($item['email'])) {
+      $email = $item['email'];
+      break;
+    }
+  }
 
   //verify that the email address is not empty
   if (empty($email)) {
@@ -233,9 +244,14 @@ function email_mail_page($object_type, $object_id, $field_name) {
   
   $entity_info = entity_extract_ids($object_type, $object);
   $settings = field_info_instance($object_type, $field_name, $entity_info[2]);
-  
-  //verify that the contact formatter is enabled
-  if ($settings['display']['full']['type'] != 'contact' && $settings['display']['full']['teaser'] != 'contact') {
+  $found = false;
+  foreach ($settings['display'] as $display_name => $display_data) {
+    if (isset($display_data['type']) && ($display_data['type'] === 'email_contact')) {
+      $found = true;
+      break;
+    }
+  }
+  if (!$found) {
     drupal_not_found();
     return;
   }
