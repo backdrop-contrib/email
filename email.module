@@ -433,3 +433,20 @@ function email_admin_settings() {
   );
   return system_settings_form($form);
 }
+
+
+/**
+ * Implements hook_content_migrate_instance_alter().
+ *
+ * D6-D7 upgrade
+ * fixes new formatter names
+ */
+function email_content_migrate_instance_alter(&$instance_value, &$field_value) {
+  if ($field_value['module'] == 'email') {
+    foreach ($instance_value['display'] as $context => $settings) {
+      if (in_array($instance_value['display'][$context]['type'], array('default', 'plain', 'contact', 'spamspan'))) {
+        $instance_value['display'][$context]['type'] = 'email_' . $instance_value['display'][$context]['type'];
+      }
+    }
+  }
+}
