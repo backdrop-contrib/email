@@ -34,6 +34,12 @@ function email_field_validate($obj_type, $object, $field, $instance, $langcode, 
   }
 }
 
+/**
+ * Implements hook_field_widget_error().
+ */
+function email_field_widget_error($element, $error, $form, &$form_state) {
+  form_error($element, $error['message']);
+}
 
 /**
  * Implements hook_content_is_empty().
