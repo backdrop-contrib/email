@@ -8,9 +8,9 @@ function email_field_info() {
   return array(
     'email' => array(
       'label' => 'Email',
-      'description' => t('This field stores and renderes email addresses.'),
-      'default_widget' => 'text_textfield',
-      'default_formatter' => 'default',
+      'description' => t('This field stores and renders email addresses.'),
+      'default_widget' => 'email_textfield',
+      'default_formatter' => 'email_default',
       'property_type' => 'text',
     ),
   );
