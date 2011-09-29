@@ -5,3 +5,4 @@ package = Fields
 
 files[] = email.module
 files[] = email.install
+files[] = email.migrate.inc

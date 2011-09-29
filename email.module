@@ -17,6 +17,13 @@ function email_field_info() {
 }
 
 /**
+ * Implements hook_migrate_api().
+ */
+function email_migrate_api() {
+  return array('api' => 2);
+}
+
+/**
  * Implements hook_field_validate().
  *
  * Possible error codes:
