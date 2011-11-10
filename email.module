@@ -122,7 +122,7 @@ function email_field_formatter_view($object_type, $object, $field, $instance, $l
     case 'email_spamspan':
       foreach ($items as $delta => $item) {
         if (module_exists('spamspan')) {
-          $element[$delta] = spamspan($item['email']);
+          $element[$delta] = array('#markup' => spamspan($item['email']));
         }
         else {
           $output = l($item['email'], 'mailto:' . $item['email']);
