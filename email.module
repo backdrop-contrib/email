@@ -20,7 +20,10 @@ function email_field_info() {
  * Implements hook_migrate_api().
  */
 function email_migrate_api() {
-  return array('api' => 2);
+  return array(
+    'api' => 2,
+    'field handlers' => array('MigrateEmailFieldHandler'),
+  );
 }
 
 /**
