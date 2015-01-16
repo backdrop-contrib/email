@@ -333,7 +333,7 @@ function email_mail_page($object_type, $object_id, $field_name) {
     return t("You cannot send more than %number messages per hour. Please try again later.", array('%number' => variable_get('email_hourly_threshold', 3)));
   }
 
-  return drupal_get_form('email_mail_page_form', $object_type, $object_id, $field_name, $email);
+  return backdrop_get_form('email_mail_page_form', $object_type, $object_id, $field_name, $email);
 }
 
 /**
@@ -454,7 +454,7 @@ function email_mail($key, &$message, $params) {
   switch ($key) {
     case 'contact':
       // Compose the body:
-      $message['body'][] = t('@name sent a message using the contact form at @url.', array('@name' => $params['name'], '@url' => $params['url']), array('langcode' => $language->language));
+      $message['body'][] = t('@name sent a message using the contact form at @url.', array('@name' => $params['name'], '@url' => $params['url']), array('langcode' => $language->langcode));
       $message['body'][] = $params['message'];
       $message['subject'] = "";
 
