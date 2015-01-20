@@ -329,8 +329,9 @@ function email_mail_page($object_type, $object_id, $field_name) {
     return MENU_NOT_FOUND;
   }
 
-  if (!flood_is_allowed('email', variable_get('email_hourly_threshold', 3))) {
-    return t("You cannot send more than %number messages per hour. Please try again later.", array('%number' => variable_get('email_hourly_threshold', 3)));
+  $config = config('email.settings');
+  if (!flood_is_allowed('email', $config->get('hourly_threshold'))) {
+    return t("You cannot send more than %number messages per hour. Please try again later.", array('%number' => $config->get('hourly_threshold')));
   }
 
   return backdrop_get_form('email_mail_page_form', $object_type, $object_id, $field_name, $email);
@@ -468,6 +469,17 @@ function email_mail($key, &$message, $params) {
   }
 }
 
+/**
+* Implements hook_config_info().
+*/
+function email_config_info() {
+  $prefixes['email.settings'] = array(
+    'label' => t('Email settings'),
+    'group' => t('Configuration'),
+  );
+  return $prefixes;
+}
+
 
 //TODO Token support
 
@@ -502,12 +514,26 @@ function email_admin_settings() {
   $form['email_hourly_threshold'] = array('#type' => 'select',
     '#title' => t('Hourly threshold for a CCK Email contact form'),
     '#options' => drupal_map_assoc(array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40, 50)),
-    '#default_value' => variable_get('email_hourly_threshold', 3),
+    '#default_value' => config_get('email.settings', 'hourly_threshold'),
     '#description' => t('The maximum number of contact form submissions a user can perform per hour.'),
   );
-  return system_settings_form($form);
+  $form['actions']['#type'] = 'actions';
+  $form['actions']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save configuration')
+  );
+  return $form;
 }
 
+/**
+ * Form submission handler for email_admin_settings().
+ */
+function email_admin_settings_submit($form, &$form_state) {
+  $config = config('email.settings');
+  $config->set('hourly_threshold', $form_state['values']['email_hourly_threshold']);
+  $config->save();
+  backdrop_set_message(t('The configuration options have been saved.'));
+}
 
 /**
  * Implements hook_content_migrate_instance_alter().
