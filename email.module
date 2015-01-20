@@ -202,7 +202,7 @@ function email_menu() {
   $items['admin/config/content/email'] = array(
     'title' => 'Email Contact Form Settings',
     'description' => 'Administer flood control settings for email contact forms',
-    'page callback' => 'drupal_get_form',
+    'page callback' => 'backdrop_get_form',
     'page arguments' => array('email_admin_settings'),
     'access arguments' => array('administer site configuration'),
     'type' => MENU_NORMAL_ITEM,
@@ -437,13 +437,13 @@ function email_mail_page_form_submit($form, &$form_state) {
   $params['url'] = url($path, array('absolute' => TRUE));
 
   // Send the e-mail to the recipients:
-  drupal_mail('email', 'contact', $email, language_default(), $params, $from);
+  backdrop_mail('email', 'contact', $email, language_default(), $params, $from);
 
   // Log the operation:
   flood_register_event('email');
   watchdog('mail', '%name-from sent an e-mail at %form.', array('%name-from' => $form_state['values']['name'], '%form' => url($_GET['q'], array('absolute' => TRUE))));
 
-  drupal_set_message(t('Your message has been sent.'));
+  backdrop_set_message(t('Your message has been sent.'));
   $form_state['redirect'] = $path;
 }
 
@@ -513,7 +513,7 @@ function email_token_values($type, $object = NULL, $options = array()) {
 function email_admin_settings() {
   $form['email_hourly_threshold'] = array('#type' => 'select',
     '#title' => t('Hourly threshold for a CCK Email contact form'),
-    '#options' => drupal_map_assoc(array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40, 50)),
+    '#options' => backdrop_map_assoc(array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40, 50)),
     '#default_value' => config_get('email.settings', 'hourly_threshold'),
     '#description' => t('The maximum number of contact form submissions a user can perform per hour.'),
   );
